@@ -215,7 +215,7 @@ namespace GraphRag.Net.Domain.Service
 
                     Nodes node = new Nodes()
                     {
-                        Id = Id,
+                        Id = Guid.NewGuid().ToString(),
                         Index = index,
                         Name = n.Name,
                         Type = n.Type,
