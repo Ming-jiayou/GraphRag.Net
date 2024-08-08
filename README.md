@@ -1,4 +1,4 @@
-这是一个参考GraphRag的dotnet简易实现
+## 这是一个参考GraphRag的dotnet简易实现
 
 基于微软在论文中提到的实现思路，执行过程GraphRAG主要实现了如下功能：
 - Source Documents → Text Chunks：将源文档分割成文本块。
@@ -10,7 +10,11 @@
 
 本项目为demo示例，仅用于学习GraphRAG思路。
 
+## 您可以直接在项目中引用NuGet包，或者直接使用本项目提供API服务。
+
 出于方便，LLM接口目前只兼容了openai的规范，其他大模型可以考虑使用one-api类的集成产品
+
+在appsettings.json配置
 
 ```
  "OpenAI": {
@@ -58,6 +62,7 @@ http://localhost:5000/
 dotnet add package GraphRag.Net
 ```
 
+### 默认配置，使用OpenAI标准接口，在配置了OpenAI的appsettings后可以使用下面代码进行注入
 添加包以后，需要进行配置文件的设置以及依赖注入
 ```
 //OpenAI配置
@@ -70,6 +75,18 @@ builder.Configuration.GetSection("GraphDBConnection").Get<GraphDBConnectionOptio
 //注入AddGraphRagNet,注意，需要先注入配置文件，然后再注入GraphRagNet
 builder.Services.AddGraphRagNet();
 ```
+
+### 如果你想接入其他模型，可以参考以下代码,这里抽象了Kernel的实现，你可以自定义实现
+```
+var kernelBuild = Kernel.CreateBuilder();
+kernelBuild.Services.AddKeyedSingleton<ITextGenerationService>("mock-text", new MockTextCompletion());
+kernelBuild.Services.AddKeyedSingleton<IChatCompletionService>("mock-chat", new MockChatCompletion());
+kernelBuild.Services.AddSingleton((ITextEmbeddingGenerationService)new MockTextEmbeddingGeneratorService());
+kernelBuild.Services.AddKeyedSingleton("mock-embedding", new MockTextEmbeddingGeneratorService());
+
+builder.Services.AddGraphRagNet(kernelBuild.Build());
+```
+
 
 使用时注入 IGraphService  服务,以下为参考示例代码
 ```
@@ -185,6 +202,18 @@ namespace GraphRag.Net.Api.Controllers
             await _graphService.GraphGlobalAsync(index);
             return Ok();
         }
+
+        /// <summary>
+        /// 删除图谱数据
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task<IActionResult> DeleteGraph(string index)
+        {
+            await _graphService.DeleteGraph(index);
+            return Ok();
+        }
     }
 
     public class InputModel
@@ -195,3 +224,5 @@ namespace GraphRag.Net.Api.Controllers
 }
 
 ```
+
+也欢迎大家加入我们的微信交流群，可以添加我的微信：**xuzeyu91** 发送进群
